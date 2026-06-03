@@ -3,7 +3,7 @@ main.py – Punto de entrada de la aplicación FastAPI "Smart Shift".
 
 Responsabilidades:
   - Crear la instancia de FastAPI con metadatos completos.
-  - Configurar el middleware CORS.
+  - Configurar el middleware CORS con orígenes explícitos para producción y local.
   - Registrar todos los routers.
   - Exponer un health-check en /health.
 """
@@ -42,9 +42,16 @@ app = FastAPI(
 # Middleware CORS
 # ─────────────────────────────────────────────────────────────
 
+# Definimos explícitamente los orígenes permitidos para evitar el choque 
+# entre allow_credentials=True y el asterisco genérico ["*"]
+origenes_permitidos = [
+    "http://localhost:5173",                     # Tu entorno local (Vite)
+    "https://smart-shift-frontend.vercel.app",   # Tu dominio oficial en Vercel
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins_list,
+    allow_origins=origenes_permitidos,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
