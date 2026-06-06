@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     SUPABASE_URL: str
     SUPABASE_SERVICE_ROLE_KEY: str
 
+    # ── GEMINI ────────────────────────────────────────────
+    GEMINI_API_KEY: str
+
     # ── JWT ───────────────────────────────────────────────
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str = "HS256"

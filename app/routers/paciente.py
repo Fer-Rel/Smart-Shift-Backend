@@ -300,7 +300,8 @@ def get_mis_citas(
         .select(
             "id_cita, numero_turno, id_paciente, id_medico, fecha_cita, "
             "hora_cita, estado, codigo_qr, fecha_reserva, canal_reserva, "
-            "asistencia_marcada, hora_llegada, atendido_en"
+            "asistencia_marcada, hora_llegada, atendido_en, "
+            "medicos (nombres, apellidos, id_hospital, id_especialidad)"
         )
         .eq("id_paciente", paciente["id_paciente"])
         .order("fecha_cita", desc=True)
@@ -308,7 +309,51 @@ def get_mis_citas(
         .execute()
     )
 
-    return result.data or []
+    res_hospitales = supabase_client.table("hospitales").select("id_hospital, nombre").execute()
+    mapa_hospitales = {h["id_hospital"]: h["nombre"] for h in res_hospitales.data} if res_hospitales.data else {}
+
+    res_especialidades = supabase_client.table("especialidades").select("id_especialidad, nombre").execute()
+    mapa_especialidades = {e["id_especialidad"]: e["nombre"] for e in res_especialidades.data} if res_especialidades.data else {}
+
+    citas_aplanadas = []
+    if result.data:
+        for row in result.data:
+            medico_rel = row.get("medicos")
+            if isinstance(medico_rel, list):
+                medico_data = medico_rel[0] if medico_rel else {}
+            elif isinstance(medico_rel, dict):
+                medico_data = medico_rel
+            else:
+                medico_data = {}
+
+            id_hospital = medico_data.get("id_hospital")
+            id_especialidad = medico_data.get("id_especialidad")
+
+            nombre_hospital = mapa_hospitales.get(id_hospital, "Hospital no especificado")
+            nombre_especialidad = mapa_especialidades.get(id_especialidad, "Especialidad no especificada")
+
+            cita_formateada = {
+                "id_cita": row.get("id_cita"),
+                "numero_turno": row.get("numero_turno"),
+                "id_paciente": row.get("id_paciente"),
+                "id_medico": row.get("id_medico"),
+                "fecha_cita": row.get("fecha_cita"),
+                "hora_cita": row.get("hora_cita"),
+                "estado": row.get("estado"),
+                "codigo_qr": row.get("codigo_qr"),
+                "fecha_reserva": row.get("fecha_reserva"),
+                "canal_reserva": row.get("canal_reserva"),
+                "asistencia_marcada": row.get("asistencia_marcada", False),
+                "hora_llegada": row.get("hora_llegada"),
+                "atendido_en": row.get("atendido_en"),
+                "nombres": medico_data.get("nombres", "Médico"),
+                "apellidos": medico_data.get("apellidos", "No Especificado"),
+                "especialidad": nombre_especialidad,
+                "hospital": nombre_hospital,
+            }
+            citas_aplanadas.append(cita_formateada)
+
+    return citas_aplanadas
 
 
 # ─────────────────────────────────────────────────────────────

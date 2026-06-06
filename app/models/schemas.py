@@ -164,6 +164,10 @@ class CitaResponse(BaseModel):
     asistencia_marcada: bool = False
     hora_llegada: Optional[datetime] = None
     atendido_en: Optional[datetime] = None
+    nombres: Optional[str] = None
+    apellidos: Optional[str] = None
+    especialidad: Optional[str] = None
+    hospital: Optional[str] = None
 
 
 class QRResponse(BaseModel):
