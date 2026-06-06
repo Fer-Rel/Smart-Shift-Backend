@@ -164,10 +164,12 @@ class CitaResponse(BaseModel):
     asistencia_marcada: bool = False
     hora_llegada: Optional[datetime] = None
     atendido_en: Optional[datetime] = None
-    nombres: Optional[str] = None
-    apellidos: Optional[str] = None
-    especialidad: Optional[str] = None
-    hospital: Optional[str] = None
+
+    # Campos planos de soporte para el Dashboard y detalles de citas
+    nombres: Optional[str] = None  # Nombre del médico asignado
+    apellidos: Optional[str] = None  # Apellidos del médico asignado
+    especialidad: Optional[str] = None  # Especialidad médica de la cita
+    hospital: Optional[str] = None  # Nombre del hospital/sede de la cita
 
 
 class QRResponse(BaseModel):
