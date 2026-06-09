@@ -13,6 +13,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 from app.routers import auth, paciente, public
+from app.routers import auth, paciente, public
+import app.chat as chat_module  # <-- Cambiamos la forma de importarlo para forzar el registro del namespace
+
+# Instancia de la aplicación
+settings = get_settings()
 
 # ─────────────────────────────────────────────────────────────
 # Instancia de la aplicación
@@ -64,6 +69,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(public.router)
 app.include_router(paciente.router)
+app.include_router(chat_module.router)
 
 # ─────────────────────────────────────────────────────────────
 # Health check
