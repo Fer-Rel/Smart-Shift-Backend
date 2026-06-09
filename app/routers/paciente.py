@@ -167,6 +167,10 @@ def get_medicos_disponibles(
 
     # ── 6. Construir respuesta ────────────────────────────
     response: List[MedicoDisponibleResponse] = []
+    
+    # --- CONTROL CRÍTICO DE TIEMPO REAL ---
+    hoy = date.today()
+    hora_actual = datetime.now().time()
 
     for medico in medicos:
         mid = medico["id_medico"]
@@ -179,6 +183,10 @@ def get_medicos_disponibles(
             hf = time.fromisoformat(franja["hora_fin"])
 
             for slot in _generate_slots(hi, hf):
+                # Si la fecha consultada es HOY y el bloque de 30 min ya pasó, se descarta
+                if fecha == hoy and slot.hora_inicio <= hora_actual:
+                    continue
+                    
                 slot_key = slot.hora_inicio.strftime("%H:%M")
                 if (mid, slot_key) not in reservadas:
                     slots_libres.append(slot)

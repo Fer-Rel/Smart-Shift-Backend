@@ -51,11 +51,25 @@ def get_settings() -> Settings:
 def _create_supabase_client() -> Client:
     """
     Inicializa el cliente Supabase usando ÚNICAMENTE la Service Role Key.
-    Esto garantiza acceso administrativo que bypassa cualquier política RLS.
+    Garantiza acceso administrativo y configura las opciones de conexión de forma segura
+    para evitar bloqueos de sockets en entornos de desarrollo concurrentes.
     """
-    cfg = get_settings()
-    return create_client(cfg.SUPABASE_URL, cfg.SUPABASE_SERVICE_ROLE_KEY)
+    from supabase import ClientOptions
 
+    cfg = get_settings()
+    
+    # Configuramos las opciones nativas desactivando el pooling agresivo de HTTP/2
+    # que genera fallos en los hilos síncronos de FastAPI en Windows
+    options = ClientOptions(
+        persist_session=False,
+        auto_refresh_token=False
+    )
+    
+    return create_client(
+        cfg.SUPABASE_URL, 
+        cfg.SUPABASE_SERVICE_ROLE_KEY,
+        options=options
+    )
 
 # Instancia singleton del cliente Supabase (se inicializa una sola vez al importar)
 supabase_client: Client = _create_supabase_client()
