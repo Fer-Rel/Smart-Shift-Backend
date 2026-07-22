@@ -113,8 +113,9 @@ def get_medicos_disponibles(
             detail="No se pueden consultar disponibilidades para fechas pasadas.",
         )
 
-    # ── 1. Día de la semana ISO (1=Lun … 7=Dom) ──────────
-    dia_semana_iso = fecha.isoweekday()  # Python isoweekday: 1=Mon, 7=Sun
+    # ── 1. Día de la semana (SQL 2=Lunes...6=Viernes / ISO 1=Lunes...7=Domingo) ──
+    dia_semana_iso = fecha.isoweekday()  # 1=Mon ... 7=Sun
+    dia_semana_sql = (fecha.isoweekday() % 7) + 1  # 2=Mon ... 6=Fri, 7=Sat, 1=Sun
 
     # ── 2. Médicos del hospital y especialidad ────────────
     medicos_result = (
@@ -138,7 +139,7 @@ def get_medicos_disponibles(
         supabase_client.table("disponibilidad_doctores")
         .select("id_medico, hora_inicio, hora_fin")
         .in_("id_medico", medico_ids)
-        .eq("dia_semana", dia_semana_iso)
+        .in_("dia_semana", [dia_semana_sql, dia_semana_iso])
         .eq("activo", True)
         .execute()
     )
@@ -233,7 +234,7 @@ def reservar_cita(
         supabase_client.table("medicos")
         .select("id_medico")
         .eq("id_medico", body.id_medico)
-        .single()
+        .limit(1)
         .execute()
     )
     if not medico_result.data:
@@ -395,7 +396,7 @@ def cancelar_cita(
         supabase_client.table("citas")
         .select("id_cita, id_paciente, fecha_cita, hora_cita, estado")
         .eq("id_cita", id_cita)
-        .single()
+        .limit(1)
         .execute()
     )
 
@@ -405,7 +406,7 @@ def cancelar_cita(
             detail="Cita no encontrada.",
         )
 
-    cita = result.data
+    cita = result.data[0]
 
     # ── 2. Verificar que pertenece al paciente autenticado ─
     if cita["id_paciente"] != paciente["id_paciente"]:
@@ -466,7 +467,7 @@ def get_qr_cita(
         supabase_client.table("citas")
         .select("id_cita, id_paciente, fecha_cita, hora_cita, estado, codigo_qr")
         .eq("id_cita", id_cita)
-        .single()
+        .limit(1)
         .execute()
     )
 
@@ -476,7 +477,7 @@ def get_qr_cita(
             detail="Cita no encontrada.",
         )
 
-    cita = result.data
+    cita = result.data[0]
 
     # ── Verificar propiedad ───────────────────────────────
     if cita["id_paciente"] != paciente["id_paciente"]:
